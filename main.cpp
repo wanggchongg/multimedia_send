@@ -36,7 +36,7 @@ static char ip[80];
 static int gop, qp, res, lcd_width=400, lcd_height=272, with_audio, with_video, with_preview, with_multi_description,
 		   with_local, with_fb, with_fec, t_init , k1_max_init=3000;
 static int camera_no = 1;
-static void *video_handle, *video_handle1; 
+static void *video_handle, *video_handle1;
 //static snd_pcm_t *audio_handle;
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;//结构常量,静态初始化互斥锁
 
@@ -77,20 +77,20 @@ struct frame_info{
 /***************************************g_yuv处理**************************************/
 enum
 {
-	WIDTH = 480, 
-	HEIGHT= 272, 
+	WIDTH = 480,
+	HEIGHT= 272,
 };
 
 enum
 {
-	YUV420Size = WIDTH * HEIGHT * 3 >> 1,  
+	YUV420Size = WIDTH * HEIGHT * 3 >> 1,
 };
 
 BYTE byBuffer[YUV420Size] = { 0 };
 
 enum
 {
-	STEP = 12, 
+	STEP = 12,
 };
 
 /***************************************g_yuv处理**************************************/
@@ -142,11 +142,11 @@ int savedata, getdata;
 FILE* file_v;
 
 /* Main Process */
-int main(int argc, char **argv){		
+int main(int argc, char **argv){
 	pthread_t /*a_pth, */v_pth, v_s_pth;//, m_c_pth;
 	pthread_t k_l_pth;
 	int ret, start, found = 0;
-	int /*a_id,*/ v_id, v_s_id;//, m_c_msg; 
+	int /*a_id,*/ v_id, v_s_id;//, m_c_msg;
 	int k_l_id;
 	unsigned int addr = 0;
 	char * rgb_for_preview = (char *)malloc(lcd_width*lcd_height*4*sizeof(char));
@@ -178,7 +178,7 @@ int main(int argc, char **argv){
 		with_fec = WITH_FEC_DEFAULT;
 		t_init = T_INIT_DEFAULT;
 		k1_max_init = K1_MAX;
-		
+
 		for(i = 1; i < argc; i += 2){
 			switch(argv[i][1]){
 				case 'i':
@@ -250,7 +250,7 @@ int main(int argc, char **argv){
 					return 1;
 			}
 		}
-		
+
 		switch(res){
 			case 4:
 				lcd_width = 480;
@@ -271,7 +271,7 @@ int main(int argc, char **argv){
 	}//else
 
 	printf("\n");
-	printf("\t***********************************\n");	
+	printf("\t***********************************\n");
 	printf("\t*                                 *\n");
 	printf("\t*       IP %15s    -i  *\n", ip);
 	printf("\t*                                 *\n");
@@ -313,7 +313,7 @@ int main(int argc, char **argv){
 	printf("\t*                                 *\n");
 	printf("\t*	      TIME_DELY %8d   -d  *\n",time_dely);
 	printf("\t*                                 *\n");
-	printf("\t***********************************\n");	
+	printf("\t***********************************\n");
 	printf("\n");
 
 	sleep(3);
@@ -342,7 +342,7 @@ int main(int argc, char **argv){
 	//signal(SIGINT, signal_ctrl_c);
 	//signal(SIGINT, exit_from_app);
 
-	
+
 	if(with_preview){
 		// Camera preview initialization
 		if((cam_p_fp = cam_p_init()) < 0)
@@ -350,7 +350,7 @@ int main(int argc, char **argv){
 
 		win0_fb_addr = (char *)addr;
 
-	    // Get capability 
+	    // Get capability
 	    if((ret = ioctl(cam_p_fp , VIDIOC_QUERYCAP, &cap)) < 0){
 		    printf("V4L2 : ioctl on VIDIOC_QUERYCAP failled\n");
 		    exit(1);
@@ -373,18 +373,18 @@ int main(int argc, char **argv){
 			    break;
 		    }
 
-		    // Test channel.type 
+		    // Test channel.type
 		    if(chan.type & V4L2_INPUT_TYPE_CAMERA){
 			    found = 1;
 			    break;
 		    }
 		    chan.index++;
 	    }
-		
-	    if(!found) 
+
+	    if(!found)
 		    exit_from_app();
 
-	    // Settings for input channel 0 which is channel of webcam 
+	    // Settings for input channel 0 which is channel of webcam
 	    chan.type = V4L2_INPUT_TYPE_CAMERA;
         //一个video设备节点可能对应多个视频源，上层调用S_INPUT ioctl在多个cvbs视频输入间切换
 	    if((ret = ioctl(cam_p_fp, VIDIOC_S_INPUT, &chan)) < 0){
@@ -401,7 +401,7 @@ int main(int argc, char **argv){
 	    preview.flags = 0;
 	    preview.fmt = preview_fmt;
 
-	    // Set up for preview 
+	    // Set up for preview
 	    if((ret = ioctl(cam_p_fp, VIDIOC_S_FBUF, &preview)) < 0){
 		    printf("V4L2 : ioctl on VIDIOC_S_BUF failed\n");
 		    exit(1);
@@ -414,42 +414,42 @@ int main(int argc, char **argv){
 		    exit(1);
 	    }
 	}
-	
-	
+
+
 	if(with_local == 0){
-		// Camera codec initialization 
+		// Camera codec initialization
 		if((cam_c_fp = cam_c_init()) < 0)
 		    exit_from_app();
 
-	    // Get capability 
+	    // Get capability
 	    if((ret = ioctl(cam_c_fp , VIDIOC_QUERYCAP, &cap)) < 0){
 		    printf("V4L2 : ioctl on VIDIOC_QUERYCAP failled\n");
 		    exit(1);
 	    }
 
-	    // Check the type - preview(OVERLAY) 
+	    // Check the type - preview(OVERLAY)
 	    if(!(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)){
 		    printf("V4L2 : Can not capture(V4L2_CAP_VIDEO_CAPTURE is false)\n");
 		    exit(1);
 	    }
 
-	    // Set format 
+	    // Set format
 	    codec_fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	    codec_fmt.fmt.pix.width = lcd_width; 
-	    codec_fmt.fmt.pix.height = lcd_height; 	
-	    codec_fmt.fmt.pix.pixelformat= V4L2_PIX_FMT_YUV420; 
+	    codec_fmt.fmt.pix.width = lcd_width;
+	    codec_fmt.fmt.pix.height = lcd_height;
+	    codec_fmt.fmt.pix.pixelformat= V4L2_PIX_FMT_YUV420;
 	    if((ret = ioctl(cam_c_fp , VIDIOC_S_FMT, &codec_fmt)) < 0){
 		    printf("V4L2 : ioctl on VIDIOC_S_FMT failled\n");
 		    exit(1);
 	    }
 	}
-	   
-	
 
-	// Encoding threads creation 
+
+
+	// Encoding threads creation
 	if(with_video){
 		v_id = pthread_create(&v_pth, 0, video_thread, 0);
-		
+
 		if(with_local == 0 && locally_store_264 == 1){
 			if(!(file_v = fopen("origin_video", "wb+"))){
 			    perror("origin_video file open error");
@@ -464,22 +464,22 @@ int main(int argc, char **argv){
 //	if(with_audio)
 //		a_id = pthread_create(&a_pth, 0, audio_thread, 0);
 
-	while(with_preview){ // preview 
-		// Get RGB frame from camera preview 
+	while(with_preview){ // preview
+		// Get RGB frame from camera preview
 		if(!read_data(cam_p_fp, &rgb_for_preview[0], lcd_width, lcd_height, LCD_BPP)){
 			printf("V4L2 : read_data() failed\n");
 			break;
 		}
-		// Write RGB frame to LCD frame buf 
+		// Write RGB frame to LCD frame buf
 		draw(win0_fb_addr, &rgb_for_preview[0], lcd_width, lcd_height, LCD_BPP);
 	}
 
 
-	// Start encoding thread 
+	// Start encoding thread
 	if(with_video){
 		pthread_join(v_pth, NULL);//使一个线程等待另一个线程结束,linux使用此函数对创建的线程进行资源回收
 	}
-    
+
     pthread_join(v_s_pth, NULL);
 	pthread_join(k_l_pth, NULL);
 
@@ -545,7 +545,7 @@ static void* video_thread(void*){
 
 
 	uint32 T = t_init; //default: 128
-	
+
 	long F = 0;
 	uint32 K = 0, R = 0;
 	unsigned int i;
@@ -571,13 +571,13 @@ static void* video_thread(void*){
 	//struct timeval tv;
 
 	FILE * local_video_source_fp = NULL;
-	
+
 	if(with_local){
 		if((local_video_source_fp = fopen("origin_video", "rb")) == 0){
 			perror("origin_video");
 			exit(1);
 		}
-			
+
 		loop_times = 3076;  //特定大小
 	}
 	else loop_times = LONG_MAX;
@@ -590,16 +590,16 @@ static void* video_thread(void*){
 
 	sprintf(&file_name[0], "Cam_encoding_%dx%d.264", lcd_width, lcd_height);
 	fflush(stdout);
-	
+
 	if(with_local == 0){
-		// Codec start 
+		// Codec start
 	    start = 1;
 	    if((ret = ioctl(cam_c_fp, VIDIOC_STREAMON, &start)) < 0){
 		    printf("V4L2 : ioctl on VIDIOC_STREAMON failed(start)\n");
 		    exit(1);
 	    }
 	}
-	
+
 
 	//*** set GOP & QP & slice_num***
 	H264_ENC_CONF conf_type = H264_ENC_SETCONF_PARAM_CHANGE;
@@ -634,7 +634,7 @@ static void* video_thread(void*){
 
 					exit(1);
 			}
-				
+
 			//printf("origin_video reading...\n");
 		}
 		else{
@@ -654,73 +654,68 @@ static void* video_thread(void*){
 		    HANDLE hMixer = YOM_Initialize();
 		    YOM_MixOSD(hMixer, &mixerConfig, &yuvImage);
 		    YOM_Uninitialize(hMixer);
-		
+
 		    memcpy(g_yuv,yuvImage.lpYUVImage,YUV420Size);
 
 		    //存在big.yuv里面，测试到底是不是编码所致的乱码
-				
+
 		    //iOffset = count_F * YUV420Size;
 		    //fseek(fp,iOffset,SEEK_SET);
 		    //fwrite(g_yuv,1,YUV420Size,fp);
 		    //count_F++;
-		
-		    /*****************************g_yuv处理*********************************/	
+
+		    /*****************************g_yuv处理*********************************/
 
 		// gettimeofday(&t_start, NULL);
 		if(yuv_no % gop == 1){
 
 			printf("\n264 i\n");
-			
+
 			conf_type = H264_ENC_SETCONF_CUR_PIC_OPT;
 			value[0] = H264_ENC_PIC_OPT_IDR;
 			value[1] = 1;
 			SsbSipH264EncodeSetConfig(video_handle, conf_type, value);
-		
+
 			encoded_buf = (unsigned char*)mfc_encoder_exe(video_handle, g_yuv, yuv_frame_buf_size, 1, &encoded_buf_size);
 
-			// if(yuv_no == 1){
-			// 	memset(sps_pps,0,21);
-			// }
+			if(yuv_no == 1){
+				memcpy(sps_pps,encoded_buf,21);
+			}
 
-			// F = encoded_buf_size+21;
-			F = encoded_buf_size;
+			F = encoded_buf_size+21;
 			K = (uint32)ceil((double)F/T);
-						
+
 			if(with_fec){
-				// if(!memcmp(sps_pps, encoded_buf, 21))
-		  //       {
-		  //       	printf("-----sps_pps = encoded_buf(21)-----\n");
-		  //       }
-            	R = (uint32)ceil(K/2);
-		        printf("K = %d  R = %d  LT_R = 50%%\n",(int)K,(int)R);
-            }
-            else{
-            	memset(input_buf, 0, K*T);
-			    memcpy(input_buf,sps_pps,21);
-			    memcpy(input_buf+21,encoded_buf,encoded_buf_size);
-            }
+	            			R = (uint32)ceil(K/2);
+			        	printf("K = %d  R = %d  LT_R = 50%%\n",(int)K,(int)R);
+           			 }
+            			else{
+	            			memset(input_buf, 0, K*T);
+				memcpy(input_buf,sps_pps,21);
+				memcpy(input_buf+21,encoded_buf,encoded_buf_size);
+           			 }
 		}
 		else{
 			printf("\n264 p\n");
 
 			encoded_buf = (unsigned char*)mfc_encoder_exe(video_handle, g_yuv, yuv_frame_buf_size, 0, &encoded_buf_size);
-		
+
 			F = encoded_buf_size;
 			K = (uint32)ceil((double)F/T);
 			if(K<5){
 				K = 5;
 			}
-			
+
 			if(with_fec){
-            	R = (uint32)ceil((LT_R*K)/(100-LT_R));
-		        printf("K = %d, R = %d  LT_R = %d%%\n",(int)K,(int)R, LT_R);
-            }
-            else{
-            	memset(input_buf, 0, K*T);
-			    memcpy(input_buf, encoded_buf, encoded_buf_size);
-            }
+            				R = (uint32)ceil((LT_R*K)/(100-LT_R));
+		        		printf("K = %d, R = %d  LT_R = %d%%\n",(int)K,(int)R, LT_R);
+           			 }
+            			else{
+            				memset(input_buf, 0, K*T);
+			  	memcpy(input_buf, encoded_buf, encoded_buf_size);
+           			 }
 		}
-        
+
 		// tv.tv_sec = 0;
 		// tv.tv_usec = 0;
 
@@ -728,7 +723,7 @@ static void* video_thread(void*){
 		// FD_SET(sockfd, &inset);
 
 		// maxfd = sockfd;
-		
+
 		// if( select(maxfd+1, &inset, NULL, NULL, &tv) > 0){
 		// 	if(FD_ISSET(sockfd, &inset))
 		// 	{
@@ -741,7 +736,7 @@ static void* video_thread(void*){
 
 		memset(output_buf,0,sizeof(Frame_header)+T_MAX);//2012
 		if(with_fec){
-			
+
 			gettimeofday(&t_start, NULL);
 		//	raptor_init(K,para);
 		//	R = (uint32)ceil((K+3)/(1-lose_q))-K;
@@ -753,12 +748,12 @@ static void* video_thread(void*){
 			raptor_reset(K,para);
 
 			memset(input_buf, 0, para->L*T);
-			// if(yuv_no%gop == 1){
-			// 	memcpy(input_buf+(para->S+para->H)*T,sps_pps,21);
-			// 	memcpy(input_buf+(para->S+para->H)*T+21, encoded_buf, encoded_buf_size);
-			// }else{
+			if(yuv_no%gop == 1){
+				memcpy(input_buf+(para->S+para->H)*T,sps_pps,21);
+				memcpy(input_buf+(para->S+para->H)*T+21, encoded_buf, encoded_buf_size);
+			}else{
 				memcpy(input_buf+(para->S+para->H)*T, encoded_buf, encoded_buf_size);
-			// }
+			}
 
 
 			int result = raptor_encode(para,R,input_buf,intermediate,output,T);
@@ -778,11 +773,11 @@ static void* video_thread(void*){
 			cost_time_usec=t_end.tv_usec-t_start.tv_usec;
 			if(cost_time_usec<0){
 				cost_time_usec+=1000000;
-				cost_time_sec--;			
+				cost_time_sec--;
 			}
 			printf("\n frame :%ld raptor encoder cost time %ld.%06ld s\n",yuv_no, cost_time_sec, cost_time_usec);
-			
-			for(symbol_no = 0; symbol_no < K+R; symbol_no++){ 
+
+			for(symbol_no = 0; symbol_no < K+R; symbol_no++){
 				frame_header->frame_no = htonl(yuv_no);
 				frame_header->slice_no = htonl(slice_no);
 				if(slice_no == LONG_MAX)
@@ -800,22 +795,22 @@ static void* video_thread(void*){
 				memcpy(output_buf, frame_header, sizeof(Frame_header));
 				memcpy(output_buf+sizeof(Frame_header), output+symbol_no*T, T);
 
-			
+
 				sem_wait(&sem_room);
 				sem_wait(&sem_id);
-			
+
 				memcpy(sendq+(T+sizeof(Frame_header))*savedata, output_buf, sizeof(Frame_header)+T);
 				savedata = (savedata+1)%20;
 				sem_post(&sem_quene);
 				sem_post(&sem_id);
 			}
 
-					
+
 			//raptor_parameterfree(para);
 			if(yuv_no == INT_MAX)
 				yuv_no = 0;
 			else
-				yuv_no++;	
+				yuv_no++;
 		}
 		else{
 
@@ -832,8 +827,8 @@ static void* video_thread(void*){
 				frame_header->K = htonl(K);
 				frame_header->R = htonl(0);
 				frame_header->esi = htonl(i);
-                frame_header->camera_no = htonl(camera_no);
-                
+                			frame_header->camera_no = htonl(camera_no);
+
 				memcpy(output_buf, frame_header, sizeof(Frame_header));
 				memcpy(output_buf+sizeof(Frame_header), input_buf+i*T, T);
 
@@ -843,7 +838,7 @@ static void* video_thread(void*){
 
 				memcpy(sendq+(T+sizeof(Frame_header))*savedata, output_buf, sizeof(Frame_header)+T);
 				savedata = (savedata+1)%20;
-	
+
 				sem_post(&sem_quene);
 				sem_post(&sem_id);
 			}
@@ -857,7 +852,7 @@ static void* video_thread(void*){
 	}
 
 	if(with_local == 0){
-		// Codec stop 
+		// Codec stop
 	    start = 0;
 	    ioctl(cam_c_fp, VIDIOC_STREAMOFF, &start);
 	}
@@ -904,7 +899,7 @@ static void* video_send_thread(void*){
 //	        printf("frame_no : %d esi : %d size : %d\n", frame_no_temp, esi_temp, header_size+T_INIT);
 
         	memcpy(output_buf_s, temp_frame, header_size+T_INIT);
-            
+
             i++;
         	getdata = (getdata+1)%20;
 		    pLen = T_INIT + header_size;
@@ -917,19 +912,19 @@ static void* video_send_thread(void*){
 			sem_wait(&sem_quene);
 		    sem_wait(&sem_id);
 
-	   
+
 		    memcpy(frame_header,sendq+getdata*(T_INIT+header_size),header_size);
 
 	        if(pLen == 0){
-	        	
+
 	        	frame_no_temp = ntohl(frame_header->frame_no);
 	        	esi_temp = ntohl(frame_header->esi);
 
 //	        	printf("frame_no : %d esi : %d size : %d\n", frame_no_temp, esi_temp, header_size+T_INIT);
 
 	        	memcpy(output_buf_s, sendq+getdata*(T_INIT+header_size), header_size+T_INIT);
-                
-                
+
+
 	        	pLen = T_INIT + header_size;
 	        	pLen += data_len;
 	        }
@@ -942,7 +937,7 @@ static void* video_send_thread(void*){
 //	        		memcpy(output_buf_s+header_size+i*T_INIT+data_len, sendq+getdata*(T_INIT+header_size)+header_size, T_INIT);
 	        		memcpy(output_buf_s+pLen, sendq+getdata*(T_INIT+header_size)+header_size, T_INIT);
 
-	        		
+
 	        	    pLen += T_INIT;
 	        	}
 	        	else{
@@ -951,22 +946,22 @@ static void* video_send_thread(void*){
 
                     sem_post(&sem_room);
 		            sem_post(&sem_id);
-         
+
 	        		break;
 	        	}
 	        }
-		    
+
 		    sem_post(&sem_room);
 		    sem_post(&sem_id);
-            
+
             i++;
 		    getdata = (getdata+1)%20;
-		    
+
 		}
-		
+
 		i--;
 		i = htonl(i);
-		
+
         memcpy(output_buf_s+T_INIT+header_size, &i, sizeof(i));
 
 		w_n = write(sockfd, output_buf_s, pLen);
@@ -1026,12 +1021,12 @@ static void* keep_linked_thread(void*){
 			lose_q = recieve;
 			printf("\n\n\n\nlose_q = %4f\n\n\n\n",lose_q);
 		}
-	}*/					
+	}*/
 //}
 /*
 static void main_msg_thread(void){
 	printf("process_4:: I AM PROCESS_4\n");
-	
+
 	char sendbuff[100] = {NULL};
 
 	int sock_fd;
@@ -1041,7 +1036,7 @@ static void main_msg_thread(void){
 	sock_addr.sun_family = AF_UNIX;
 	strcpy(sock_addr.sun_path,"path_process_1");
 	sock_len = sizeof(sock_addr);
-	
+
 	struct timeval now;
 	gettimeofday(&now, NULL);
 	struct linkmsg linkmsg_send;
@@ -1091,7 +1086,7 @@ static void main_msg_thread(void){
 //		printf("here5555555555555555555555555555555555555555555\n");
 //		q->size++;
 //		q->first = q->last = new_node;
-//	} 
+//	}
 //}
 
 //void get_data(quene * q,char * buf){
@@ -1102,7 +1097,7 @@ static void main_msg_thread(void){
 //	printf("quene length : %d\n",q->size);
 //	if(q->first){
 //		p = (void *)(q->first + 1);
-	
+
 //		d = q->first;
 //		if(q->first->next){
 //			printf("what22222222222222222222222222222222222222\n");
@@ -1125,8 +1120,8 @@ static void main_msg_thread(void){
 //			d = NULL;
 //		}
 //	}
-		
-	
+
+
 //}
 ////////////////////////////////////
 /*
@@ -1163,9 +1158,9 @@ void audio_thread(void){
 	while(!finished){
 		signal(SIGINT, (void (*)(int))ctrl_c);
 		//record
-		while(snd_pcm_readi(audio_handle, buf, period_size) != period_size) 
+		while(snd_pcm_readi(audio_handle, buf, period_size) != period_size)
 			snd_pcm_prepare(audio_handle);
-		
+
 		//send by udp-socket
 		//write frame_info
 		struct frame_info frame_info;
@@ -1214,7 +1209,7 @@ static int read_data(int fp, char *buf, int width, int height, int bpp){
 		if((ret = read(fp, buf, width * height * 2)) != width * height * 2){
 			return 0;
 		}
-	} 
+	}
 	else{
 		if((ret = read(fp, buf, width * height * 4)) != width * height * 4){
 			return 0;
@@ -1258,7 +1253,7 @@ static int fb_init(int win_num, int bpp, int x, int y, int width, int height, un
 
 	switch(bpp){
 		case 16:
-			fb_size = width * height * 2;	
+			fb_size = width * height * 2;
 			break;
 		case 24:
 			fb_size = width * height * 4;
@@ -1267,7 +1262,7 @@ static int fb_init(int win_num, int bpp, int x, int y, int width, int height, un
 			printf("16 and 24 bpp support");
 			return -1;
 	}
-		
+
 	if((*addr = (unsigned int) mmap(0, fb_size, PROT_READ | PROT_WRITE, MAP_SHARED, dev_fp, 0)) < 0){
 		printf("mmap() error in fb_init()");
 		return -1;
@@ -1329,7 +1324,7 @@ static void draw(char *dest, char *src, int width, int height, int bpp){
 			rgb32 = (unsigned long *) (src + (y * width * 4));
 			rgb16 = (unsigned short *) (dest + (y * lcd_width * 2));
 
-			// 24 bit RGB data -> 16 bit RGB data 
+			// 24 bit RGB data -> 16 bit RGB data
 			for(x = 0; x < end_x; x++){
 				*rgb16 = ( (*rgb32 >> 8) & 0xF800 ) | ( (*rgb32 >> 5) & 0x07E0 ) | ( (*rgb32 >> 3) & 0x001F );
 				rgb32++;
@@ -1448,7 +1443,7 @@ static void ctrl_c(int no){
 	if(video_handle != NULL){
 		mfc_encoder_free(video_handle);
 		// snd_pcm_close((snd_pcm_t*)video_handle);
-		
+
 		//close file
 		fclose(file_v);
 		printf("********Interrupt and free the handle********\n");
@@ -1466,9 +1461,9 @@ static void exit_from_app(){
 	int start;
 	int fb_size = lcd_width * lcd_height * 4;
 	int ret;
-	
+
 	if(with_preview){
-		// Stop previewing 
+		// Stop previewing
 	    start = 0;
 	    ret = ioctl(cam_p_fp, VIDIOC_OVERLAY, &start);
 	    if(ret < 0){
@@ -1479,7 +1474,7 @@ static void exit_from_app(){
 	    close(cam_p_fp);
 	    munmap(win0_fb_addr, fb_size);
 	}
-	
+
 
 	switch(LCD_BPP){
 		case 16:
@@ -1497,7 +1492,7 @@ static void exit_from_app(){
 	if(cam_c_fp){
 		close(cam_c_fp);
 	}
-	    
+
     if(video_handle){
     	mfc_encoder_free(video_handle);
     }
